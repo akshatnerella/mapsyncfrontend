@@ -6,6 +6,7 @@ import TripCard from '../components/TripCard';
 import Modal from '../components/Modal';
 import { useAuth } from '../context/AuthContext';
 import { useTrip } from '../context/TripContext';
+import PlacesAutocomplete from '../components/PlacesAutocomplete';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -155,13 +156,11 @@ const Dashboard: React.FC = () => {
             <label htmlFor="origin" className="block text-sm font-medium text-gray-700 mb-1">
               Origin
             </label>
-            <input
-              type="text"
-              id="origin"
-              value={origin}
-              onChange={(e) => setOrigin(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+            <PlacesAutocomplete
               placeholder="e.g. San Francisco, CA"
+              value={origin}
+              onChange={(value) => setOrigin(value)}
+              className="w-full"
             />
           </div>
           
@@ -169,13 +168,11 @@ const Dashboard: React.FC = () => {
             <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-1">
               Destination
             </label>
-            <input
-              type="text"
-              id="destination"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+            <PlacesAutocomplete
               placeholder="e.g. Los Angeles, CA"
+              value={destination}
+              onChange={(value) => setDestination(value)}
+              className="w-full"
             />
           </div>
           
@@ -195,20 +192,19 @@ const Dashboard: React.FC = () => {
             
             {stops.map((stop, index) => (
               <div key={index} className="flex items-center mb-2">
-                <input
-                  type="text"
-                  value={stop}
-                  onChange={(e) => handleStopChange(index, e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                <PlacesAutocomplete
                   placeholder={`Stop ${index + 1}`}
+                  value={stop}
+                  onChange={(value) => handleStopChange(index, value)}
+                  className="w-full"
                 />
                 {stops.length > 1 && (
                   <button
                     type="button"
                     onClick={() => handleRemoveStop(index)}
-                    className="ml-2 text-gray-400 hover:text-red-500"
+                    className="ml-2 text-red-500 hover:text-red-700"
                   >
-                    &times;
+                    <X className="h-5 w-5" />
                   </button>
                 )}
               </div>

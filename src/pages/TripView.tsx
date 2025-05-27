@@ -6,6 +6,7 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import Modal from '../components/Modal';
 import { useTrip, Stop } from '../context/TripContext';
+import PlacesAutocomplete from '../components/PlacesAutocomplete';
 
 const TripView: React.FC = () => {
   const { tripId } = useParams<{ tripId: string }>();
@@ -180,13 +181,11 @@ const TripView: React.FC = () => {
             <label htmlFor="stopAddress" className="block text-sm font-medium text-gray-700 mb-1">
               Stop Address
             </label>
-            <input
-              type="text"
-              id="stopAddress"
-              value={newStopAddress}
-              onChange={(e) => setNewStopAddress(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+            <PlacesAutocomplete
               placeholder="e.g. Golden Gate Bridge, San Francisco, CA"
+              value={newStopAddress}
+              onChange={(value) => setNewStopAddress(value)}
+              className="w-full"
             />
           </div>
           

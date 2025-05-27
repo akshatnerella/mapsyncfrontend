@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Geoapify Autocomplete custom styles */
+.geoapify-autocomplete-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #111827;
+}
+
+.geoapify-autocomplete-input:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: #6366f1;
+  border-color: #6366f1;
+}
+
+.geoapify-autocomplete-items {
+  border-radius: 0.5rem;
+  margin-top: 0.25rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
