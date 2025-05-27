@@ -15,22 +15,8 @@ function App() {
         <TripProvider>
           <Routes>
             <Route path="/" element={<LandingPage />} />
-            <Route 
-              path="/dashboard" 
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/trip/:tripId" 
-              element={
-                <ProtectedRoute>
-                  <TripView />
-                </ProtectedRoute>
-              } 
-            />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/trips/:tripId" element={<TripView />} />
             <Route path="*" element={<ErrorPage />} />
           </Routes>
         </TripProvider>
@@ -40,3 +26,10 @@ function App() {
 }
 
 export default App;
+
+<Routes>
+  <Route path="/" element={<LandingPage />} />
+  <Route path="/dashboard" element={<Dashboard />} />
+  <Route path="/trips/:tripId" element={<TripView />} />
+  <Route path="*" element={<ErrorPage />} />
+</Routes>

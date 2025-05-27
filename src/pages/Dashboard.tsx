@@ -38,25 +38,29 @@ const Dashboard: React.FC = () => {
     setStops(newStops);
   };
 
-  const handleCreateTrip = () => {
+  const handleCreateTrip = async () => {
     if (!origin || !destination) {
       setError('Origin and destination are required');
       return;
     }
     
-    // Filter out empty stops
-    const filteredStops = stops.filter(stop => stop.trim() !== '');
-    const newTripId = createTrip(origin, destination, filteredStops);
-    
-    setCreatedTripId(newTripId);
-    setIsCreateModalOpen(false);
-    setIsSuccessModalOpen(true);
-    
-    // Reset form
-    setOrigin('');
-    setDestination('');
-    setStops(['']);
-    setError('');
+    try {
+      // Filter out empty stops
+      const filteredStops = stops.filter(stop => stop.trim() !== '');
+      const shareLink = await createTrip(origin, destination, filteredStops);
+      
+      setIsCreateModalOpen(false);
+      setIsSuccessModalOpen(true);
+      setCreatedTripId(shareLink);
+      
+      // Reset form
+      setOrigin('');
+      setDestination('');
+      setStops(['']);
+      setError('');
+    } catch (error) {
+      setError('Failed to create trip. Please try again.');
+    }
   };
 
   const handleJoinTrip = () => {
@@ -264,54 +268,27 @@ const Dashboard: React.FC = () => {
         </form>
       </Modal>
       
-      {/* Success Modal after creating a trip */}
+      {/* Success Modal */}
       <Modal
         isOpen={isSuccessModalOpen}
         onClose={() => setIsSuccessModalOpen(false)}
         title="Trip Created Successfully!"
       >
         <div className="space-y-4">
-          <div>
-            <p className="text-sm font-medium text-gray-700 mb-1">Trip ID</p>
-            <div className="flex items-center">
-              <code className="block w-full px-3 py-2 bg-gray-100 rounded-lg text-gray-800">
-                {createdTripId}
-              </code>
-              <button
-                onClick={() => copyToClipboard(createdTripId)}
-                className="ml-2 text-indigo-600 hover:text-indigo-800"
-                title="Copy to clipboard"
-              >
-                📋
-              </button>
-            </div>
+          <p>Your trip has been created! Share this link with your friends to invite them:</p>
+          <div className="flex items-center justify-between bg-gray-100 p-3 rounded">
+            <code className="text-lg break-all">{createdTripId}</code>
+            <Button onClick={() => copyToClipboard(createdTripId)} variant="secondary">Copy</Button>
           </div>
-          
-          <div>
-            <p className="text-sm font-medium text-gray-700 mb-1">Sharable Link</p>
-            <div className="flex items-center">
-              <code className="block w-full px-3 py-2 bg-gray-100 rounded-lg text-gray-800 truncate">
-                {`${window.location.origin}/trip/${createdTripId}`}
-              </code>
-              <button
-                onClick={() => copyToClipboard(`${window.location.origin}/trip/${createdTripId}`)}
-                className="ml-2 text-indigo-600 hover:text-indigo-800"
-                title="Copy to clipboard"
-              >
-                📋
-              </button>
-            </div>
+          <div className="flex justify-end space-x-3 mt-4">
+            <Button onClick={() => setIsSuccessModalOpen(false)} variant="secondary">Close</Button>
+            <Button 
+              onClick={() => window.location.href = createdTripId} 
+              variant="primary"
+            >
+              Go to Trip
+            </Button>
           </div>
-          
-          <Button
-            onClick={() => {
-              setIsSuccessModalOpen(false);
-              window.location.href = `/trip/${createdTripId}`;
-            }}
-            fullWidth
-          >
-            Go to Trip
-          </Button>
         </div>
       </Modal>
     </div>

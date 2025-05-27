@@ -18,7 +18,7 @@ export interface Trip {
 interface TripContextType {
   trips: Trip[];
   currentTrip: Trip | null;
-  createTrip: (origin: string, destination: string, stops: string[]) => string;
+  createTrip: (origin: string, destination: string, stops: string[]) => Promise<string>;
   joinTrip: (tripId: string) => boolean;
   addStop: (tripId: string, stopName: string, stopAddress: string) => void;
   getTrip: (tripId: string) => Trip | null;
@@ -39,43 +39,55 @@ interface TripProviderProps {
 }
 
 export const TripProvider: React.FC<TripProviderProps> = ({ children }) => {
-  const [trips, setTrips] = useState<Trip[]>([
-    {
-      id: 'abc123',
-      origin: 'San Francisco, CA',
-      destination: 'Los Angeles, CA',
-      stops: [
-        { id: 'stop1', name: 'Monterey', address: 'Monterey, CA' },
-        { id: 'stop2', name: 'Santa Barbara', address: 'Santa Barbara, CA' }
-      ],
-      createdAt: new Date().toISOString(),
-      createdBy: 'user123'
-    }
-  ]);
+  const [trips, setTrips] = useState<Trip[]>([]);
   const [currentTrip, setCurrentTrip] = useState<Trip | null>(null);
 
-  // Generate a random ID (simplified)
-  const generateId = () => Math.random().toString(36).substring(2, 8);
+  const createTrip = async (origin: string, destination: string, stops: string[]) => {
+    try {
+      const response = await fetch('https://mapsync.onrender.com/newtrip', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        mode: 'cors',
+        body: JSON.stringify({
+          origin,
+          destination,
+          stops,
+        }),
+      });
 
-  const createTrip = (origin: string, destination: string, stops: string[]) => {
-    const newTripId = generateId();
-    const newTrip: Trip = {
-      id: newTripId,
-      origin,
-      destination,
-      stops: stops.map((stop, index) => ({
-        id: `stop-${index}`,
-        name: stop,
-        address: stop
-      })),
-      createdAt: new Date().toISOString(),
-      createdBy: 'user123' // Would be replaced with current user ID
-    };
+      const data = await response.json();
+      if (data.status === 'success') {
+        return data.shareLink.trim();
+      } else {
+        throw new Error(data.message || 'Failed to create trip');
+      }
+    } catch (error) {
+      console.log('Falling back to local storage due to backend error');
+      const tripId = Math.random().toString(36).substring(2, 8);
+      const newTrip: Trip = {
+        id: tripId,
+        origin,
+        destination,
+        stops: stops.map((stop, index) => ({
+          id: `stop-${index}`,
+          name: stop,
+          address: stop
+        })),
+        createdAt: new Date().toISOString(),
+        createdBy: 'user123'
+      };
 
-    setTrips([...trips, newTrip]);
-    setCurrentTrip(newTrip);
-    return newTripId;
+      setTrips(prev => [...prev, newTrip]);
+      setCurrentTrip(newTrip);
+      return `trips/${tripId}`;
+    }
   };
+
+  // Remove the entire old createTrip implementation and its helper function
+  // Only keep the other existing functions
 
   const joinTrip = (tripId: string) => {
     const trip = trips.find(t => t.id === tripId);
