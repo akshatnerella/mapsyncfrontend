@@ -1,0 +1,321 @@
+import React, { useState } from 'react';
+import { Plus, Users } from 'lucide-react';
+import Navbar from '../components/Navbar';
+import Button from '../components/Button';
+import TripCard from '../components/TripCard';
+import Modal from '../components/Modal';
+import { useAuth } from '../context/AuthContext';
+import { useTrip } from '../context/TripContext';
+
+const Dashboard: React.FC = () => {
+  const { user } = useAuth();
+  const { trips, createTrip, joinTrip } = useTrip();
+  
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  
+  const [origin, setOrigin] = useState('');
+  const [destination, setDestination] = useState('');
+  const [stops, setStops] = useState<string[]>(['']);
+  const [tripId, setTripId] = useState('');
+  const [createdTripId, setCreatedTripId] = useState('');
+  const [error, setError] = useState('');
+
+  const handleAddStop = () => {
+    setStops([...stops, '']);
+  };
+
+  const handleStopChange = (index: number, value: string) => {
+    const newStops = [...stops];
+    newStops[index] = value;
+    setStops(newStops);
+  };
+
+  const handleRemoveStop = (index: number) => {
+    const newStops = [...stops];
+    newStops.splice(index, 1);
+    setStops(newStops);
+  };
+
+  const handleCreateTrip = () => {
+    if (!origin || !destination) {
+      setError('Origin and destination are required');
+      return;
+    }
+    
+    // Filter out empty stops
+    const filteredStops = stops.filter(stop => stop.trim() !== '');
+    const newTripId = createTrip(origin, destination, filteredStops);
+    
+    setCreatedTripId(newTripId);
+    setIsCreateModalOpen(false);
+    setIsSuccessModalOpen(true);
+    
+    // Reset form
+    setOrigin('');
+    setDestination('');
+    setStops(['']);
+    setError('');
+  };
+
+  const handleJoinTrip = () => {
+    if (!tripId) {
+      setError('Trip ID is required');
+      return;
+    }
+
+    const success = joinTrip(tripId);
+    if (success) {
+      setIsJoinModalOpen(false);
+      setTripId('');
+      setError('');
+      window.location.href = `/trip/${tripId}`;
+    } else {
+      setError('Invalid Trip ID');
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      
+      <main className="max-w-6xl mx-auto px-4 py-8 sm:px-6">
+        {/* Welcome section */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">
+            Welcome back, {user?.name?.split(' ')[0] || 'Traveler'}!
+          </h1>
+          
+          <div className="flex space-x-3">
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              fullWidth={false}
+              className="flex-1 sm:flex-none"
+            >
+              <Plus className="h-5 w-5 mr-2" /> Start a Trip
+            </Button>
+            <Button
+              onClick={() => setIsJoinModalOpen(true)}
+              variant="outline"
+              fullWidth={false}
+              className="flex-1 sm:flex-none"
+            >
+              <Users className="h-5 w-5 mr-2" /> Join a Trip
+            </Button>
+          </div>
+        </div>
+        
+        {/* Your trips section */}
+        <section>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Trips</h2>
+          
+          {trips.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {trips.map(trip => (
+                <TripCard key={trip.id} trip={trip} />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl p-8 text-center shadow-sm">
+              <p className="text-gray-500 mb-4">You don't have any trips yet.</p>
+              <Button 
+                onClick={() => setIsCreateModalOpen(true)}
+                variant="primary"
+              >
+                Create Your First Trip
+              </Button>
+            </div>
+          )}
+        </section>
+      </main>
+      
+      {/* Create Trip Modal */}
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setError('');
+          setOrigin('');
+          setDestination('');
+          setStops(['']);
+        }}
+        title="Start a New Trip"
+      >
+        <form className="space-y-4">
+          <div>
+            <label htmlFor="origin" className="block text-sm font-medium text-gray-700 mb-1">
+              Origin
+            </label>
+            <input
+              type="text"
+              id="origin"
+              value={origin}
+              onChange={(e) => setOrigin(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="e.g. San Francisco, CA"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="destination" className="block text-sm font-medium text-gray-700 mb-1">
+              Destination
+            </label>
+            <input
+              type="text"
+              id="destination"
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="e.g. Los Angeles, CA"
+            />
+          </div>
+          
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Optional Stops
+              </label>
+              <button
+                type="button"
+                onClick={handleAddStop}
+                className="text-xs text-indigo-600 hover:text-indigo-800"
+              >
+                + Add another stop
+              </button>
+            </div>
+            
+            {stops.map((stop, index) => (
+              <div key={index} className="flex items-center mb-2">
+                <input
+                  type="text"
+                  value={stop}
+                  onChange={(e) => handleStopChange(index, e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder={`Stop ${index + 1}`}
+                />
+                {stops.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveStop(index)}
+                    className="ml-2 text-gray-400 hover:text-red-500"
+                  >
+                    &times;
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          {error && (
+            <p className="text-red-500 text-sm">{error}</p>
+          )}
+          
+          <Button
+            type="button"
+            onClick={handleCreateTrip}
+            fullWidth
+          >
+            Create Trip
+          </Button>
+        </form>
+      </Modal>
+      
+      {/* Join Trip Modal */}
+      <Modal
+        isOpen={isJoinModalOpen}
+        onClose={() => {
+          setIsJoinModalOpen(false);
+          setError('');
+          setTripId('');
+        }}
+        title="Join an Existing Trip"
+      >
+        <form className="space-y-4">
+          <div>
+            <label htmlFor="tripId" className="block text-sm font-medium text-gray-700 mb-1">
+              Trip ID or Invite Code
+            </label>
+            <input
+              type="text"
+              id="tripId"
+              value={tripId}
+              onChange={(e) => setTripId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="e.g. abc123"
+            />
+          </div>
+          
+          {error && (
+            <p className="text-red-500 text-sm">{error}</p>
+          )}
+          
+          <Button
+            type="button"
+            onClick={handleJoinTrip}
+            fullWidth
+          >
+            Join Trip
+          </Button>
+        </form>
+      </Modal>
+      
+      {/* Success Modal after creating a trip */}
+      <Modal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        title="Trip Created Successfully!"
+      >
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-1">Trip ID</p>
+            <div className="flex items-center">
+              <code className="block w-full px-3 py-2 bg-gray-100 rounded-lg text-gray-800">
+                {createdTripId}
+              </code>
+              <button
+                onClick={() => copyToClipboard(createdTripId)}
+                className="ml-2 text-indigo-600 hover:text-indigo-800"
+                title="Copy to clipboard"
+              >
+                📋
+              </button>
+            </div>
+          </div>
+          
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-1">Sharable Link</p>
+            <div className="flex items-center">
+              <code className="block w-full px-3 py-2 bg-gray-100 rounded-lg text-gray-800 truncate">
+                {`${window.location.origin}/trip/${createdTripId}`}
+              </code>
+              <button
+                onClick={() => copyToClipboard(`${window.location.origin}/trip/${createdTripId}`)}
+                className="ml-2 text-indigo-600 hover:text-indigo-800"
+                title="Copy to clipboard"
+              >
+                📋
+              </button>
+            </div>
+          </div>
+          
+          <Button
+            onClick={() => {
+              setIsSuccessModalOpen(false);
+              window.location.href = `/trip/${createdTripId}`;
+            }}
+            fullWidth
+          >
+            Go to Trip
+          </Button>
+        </div>
+      </Modal>
+    </div>
+  );
+};
+
+export default Dashboard;
